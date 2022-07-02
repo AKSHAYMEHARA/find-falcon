@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://kit.fontawesome.com/3332051f22.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="style.css" />
+    <title>Falcon</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="./index.html">Navbar</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                aria-current="page"
+                href=""
+                onclick="resetButton()"
+                >Reset</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://www.geektrust.com"
+                >GeekTrust Home</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <main>
+        <h1 class="text-center">Finding Falcon</h1>
+        <h3 class="text-center my-5">Select planets you want to search in:</h3>
+        <div class="row">
+          <div class="col-lg-2 col-md-6 col-sm-6">
+            <p class="mx-2">Destination 1</p>
+            <div id="destination1"></div>
+            <div id="vechileList1" class="my-3"></div>
+          </div>
+          <div class="col-lg-2 col-md-6 col-sm-6">
+            <p class="mx-2">Destination 2</p>
+            <div id="destination2"></div>
+            <div id="vechileList2" class="my-3"></div>
+          </div>
+          <div class="col-lg-2 col-md-6 col-sm-6">
+            <p class="mx-2">Destination 3</p>
+            <div id="destination3"></div>
+            <div id="vechileList3" class="my-3"></div>
+          </div>
+          <div class="col-lg-2 col-md-6 col-sm-6">
+            <p class="mx-2">Destination 4</p>
+            <div id="destination4"></div>
+            <div id="vechileList4" class="my-3"></div>
+          </div>
+          <div class="col-lg-2 col-md-6 col-sm-6">
+            <p>Time Taken</p>
+            <span id="time-taken">0</span>
+          </div>
+        </div>
+        <button class="btn btn-dark" onclick="submitHandler()">
+          Find Falcon
+        </button>
+        <footer class="text-center">
+          Coding Problem
+          <a
+            href="http://www.greektrust.in/finding-falcon"
+            target="_blank"
+            rel="noopener noreferrer"
+            >http://www.greektrust.in/finding-falcon</a
+          >
+        </footer>
+      </main>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+      crossorigin="anonymous"
+    ></script>
+    <script type="module">
+      import {
+        fetchPlanet,
+        fetchVehicle,
+        injectToDOM,
+        showVechicleList,
+      } from "./main.js";
+
+      let planetList;
+      let vehicleList;
+      let destination = 1;
+      let vehicle = [];
+      let planet = [];
+      let timeTaken = 0;
+
+      (async function () {
+        planetList = await fetchPlanet();
+        vehicleList = await fetchVehicle();
+        injectToDOM(planetList, destination, null);
+        localStorage.clear();
+      })();
+
+      function selectHandler(this1) {
+        if (!planet.includes(this1.value)) {
+          planet.push(this1.value);
+          showVechicleList(vehicleList, destination, vehicle, null);
+          injectToDOM(
+            planetList,
+            destination,
+            planet[planet.indexOf(this1.value)]
+          );
+        }
+      }
+
+      function checkHandler(this1) {
+        const counts = {};
+        for (let num of vehicle) {
+          counts[num] = counts[num] ? counts[num] + 1 : 1;
+        }
+        vehicleList.forEach((ele) => {
+          if (ele.name === this1.value.split("-")[0]) {
+            if (
+              counts[this1.value] === undefined ||
+              ele.total_no >= counts[this1.value]
+            ) {
+              vehicle.push(this1.value);
+            }
+          }
+        });
+
+        let index = vehicle.indexOf(this1.value);
+        vehicleList.forEach((ele) => {
+          if (ele.name === vehicle[index].split("-")[0]) {
+            if (ele.total_no > 0) {
+              ele.total_no--;
+              showVechicleList(vehicleList, destination, vehicle, this1.value);
+              timeTaken +=
+                planet[index].split("-")[1] / vehicle[index].split("-")[1];
+
+              planetList = planetList.filter(
+                (ele) => ele.name !== planet[destination - 1].split("-")[0]
+              );
+              destination++;
+              injectToDOM(planetList, destination, null);
+              document.getElementById("time-taken").innerText = timeTaken;
+            } else {
+              showVechicleList(vehicleList, destination, null, null);
+              alert("No ship available");
+            }
+          }
+        });
+      }
+
+      async function tokenGeneration() {
+        try {
+          var myHeaders = new Headers();
+          myHeaders.append("Accept", "application/json");
+
+          var requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+            redirect: "follow",
+          };
+          const response = await fetch(
+            "https://findfalcone.herokuapp.com/token",
+            requestOptions
+          );
+          return await response.json();
+        } catch (error) {
+          console.error(error);
+        }
+      }
+      async function submitHandler() {
+        let planet_list = [];
+        let vehicle_list = [];
+        vehicle.forEach((ele) => {
+          vehicle_list.push(String(ele.split("-")[0]));
+        });
+        planet.forEach((ele) => {
+          planet_list.push(String(ele.split("-")[0]));
+        });
+
+        try {
+          let token = await tokenGeneration();
+          var bodyData = JSON.stringify({
+            token: token.token,
+            planet_names: planet_list,
+            vehicle_names: vehicle_list,
+          });
+          var myHeaders = new Headers();
+          myHeaders.append("Accept", "application/json");
+          myHeaders.append("Content-Type", "application/json");
+          var requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+            body: bodyData,
+            redirect: "follow",
+          };
+          const response = await fetch(
+            "https://findfalcone.herokuapp.com/find",
+            requestOptions
+          );
+          const data = await response.json();
+          window.location.replace("./successScreen.html");
+          localStorage.setItem("response", JSON.stringify(data));
+          localStorage.setItem("timeTaken", JSON.stringify(timeTaken));
+          console.log(data);
+        } catch (error) {
+          console.error(error);
+          localStorage.setItem("response", JSON.stringify(error.message));
+        }
+      }
+
+      function resetButton() {
+        planetList = [];
+        vehicleList = [];
+        destination = 1;
+        vehicle = [];
+        planet = [];
+        timeTaken = 0;
+        let i = 4;
+        document.getElementById("time-taken").innerText = timeTaken;
+        showVechicleList(vehicleList, destination, vehicle, null);
+        while (i >= 1) {
+          const destin = document.querySelector(`#destination${i}`);
+          const vehic = document.querySelector(`#vechileList${i}`);
+          while (destin.firstChild) {
+            while (vehic.firstChild) {
+              vehic.removeChild(vehic.lastChild);
+            }
+            destin.removeChild(destin.lastChild);
+          }
+          i--;
+        }
+      }
+
+      window.selectHandler = selectHandler;
+      window.checkHandler = checkHandler;
+      window.tokenGeneration = tokenGeneration;
+      window.submitHandler = submitHandler;
+      window.resetButton = resetButton;
+    </script>
+  </body>
+</html>
